@@ -102,7 +102,6 @@ async function DownloadProfileImage(url, name) {
 
     return new Promise(async (resolve, reject) => {
         try {
-
             await page.goto(url, {
                 waitUntil: 'networkidle2',
                 timeout: timeout
@@ -112,6 +111,8 @@ async function DownloadProfileImage(url, name) {
 
         } finally {
             try {
+                await sleep(10000);
+
                 try {
                     await page.waitForSelector(`[aria-label="open profile picture"]`)
                 } catch (error) {
@@ -180,4 +181,8 @@ async function downloadFile(url, outputPath) {
         });
         writer.on('error', reject);
     });
+}
+
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
