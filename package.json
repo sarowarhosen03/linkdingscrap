@@ -1,0 +1,20 @@
+{
+  "name": "typeracer-crack",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "convert-excel-to-json": "^1.7.0",
+    "node-html-parser": "^6.1.12",
+    "puppeteer": "^22.6.0",
+    "xlsx": "^0.18.5"
+  }
+}
