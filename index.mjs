@@ -45,7 +45,7 @@ for (let j = 0; j < fileNames.length; j++) {
         let status = ""
 
         let outputPath = `${outputFolderPath}/${users[index].B}.jpg`
-        if (users?.c) {
+        if (users?.C) {
             console.log(`Skiping already Downloded ${outputPath}`)
         }
         else {
@@ -70,7 +70,7 @@ for (let j = 0; j < fileNames.length; j++) {
                     if (item.G == users[index].G) {
                         return {
                             ...item,
-                            c: status
+                            C: status
                         }
 
                     }
@@ -89,7 +89,7 @@ for (let j = 0; j < fileNames.length; j++) {
 let fileRes = [
     ['A', "B", "C", "D", "E", "G"]
 ]
-let oldData = JSON.parse(fs.readFileSync(outputFolderPath, 'utf-8')) || {};
+let oldData = JSON.parse(fs.readFileSync(OutPutFileName, 'utf-8')) || {};
 Object.keys(oldData).forEach((key) => {
     console.log(oldData[key]);
     oldData[key].slice(1).forEach((item) => {
