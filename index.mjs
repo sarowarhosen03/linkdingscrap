@@ -111,7 +111,7 @@ async function DownloadProfileImage(url, name) {
 
         } finally {
             try {
-                await sleep(10000);
+               // await sleep(10000);
 
                 try {
                     await page.waitForSelector(`[aria-label="open profile picture"]`)
