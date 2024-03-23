@@ -46,7 +46,7 @@ for (let j = 0; j < fileNames.length; j++) {
         let status = ""
 
         let outputPath = `${outputFolderPath}/${users[index].B}.jpg`
-        if (users?.C) {
+        if (users[index]?.C) {
             console.log(`Skiping already Downloded ${outputPath}`)
         }
         else {
