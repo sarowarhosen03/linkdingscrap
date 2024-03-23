@@ -105,6 +105,8 @@ Object.keys(oldData).forEach((key) => {
     })
 })
 saveAsExel(inFileName.split(".")[0] + "-new", fileRes);
+fs.unlinkSync(OutPutFileName);
+
 browser.close();
 process.exit(0);
 async function DownloadProfileImage(url, name) {
