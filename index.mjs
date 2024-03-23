@@ -7,7 +7,12 @@ import puppeteer from 'puppeteer';
 import saveAsExel from './d.js';
 
 const timeout = 3000;
-const sleepTime=10000;
+const sleepTime = 10000;
+
+
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const inFileName = process.argv.slice(2)[0] || "sheet.xlsx";
 const OutPutFileName = inFileName.split(".")[0] + ".json";
@@ -18,6 +23,9 @@ if (!fs.existsSync(OutPutFileName)) {
     });
     fs.writeFileSync(OutPutFileName, JSON.stringify(result));
 }
+
+
+
 let result = JSON.parse(fs.readFileSync(OutPutFileName, 'utf-8'));
 
 
@@ -92,13 +100,13 @@ let fileRes = [
 ]
 let oldData = JSON.parse(fs.readFileSync(OutPutFileName, 'utf-8')) || {};
 Object.keys(oldData).forEach((key) => {
-    console.log(oldData[key]);
     oldData[key].slice(1).forEach((item) => {
         fileRes.push([item?.A, item?.B, item?.C, item?.D, item?.E, item?.G])
     })
 })
 saveAsExel(inFileName.split(".")[0] + "-new", fileRes);
-
+browser.close();
+process.exit(0);
 async function DownloadProfileImage(url, name) {
 
     return new Promise(async (resolve, reject) => {
@@ -112,7 +120,7 @@ async function DownloadProfileImage(url, name) {
 
         } finally {
             try {
-               await sleep(sleepTime);
+                await sleep(sleepTime);
 
                 try {
                     await page.waitForSelector(`[aria-label="open profile picture"]`)
@@ -184,6 +192,3 @@ async function downloadFile(url, outputPath) {
     });
 }
 
-const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
