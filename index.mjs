@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer';
 import saveAsExel from './d.js';
 
 const timeout = 3000;
+const sleepTime=10000;
 
 const inFileName = process.argv.slice(2)[0] || "sheet.xlsx";
 const OutPutFileName = inFileName.split(".")[0] + ".json";
@@ -111,7 +112,7 @@ async function DownloadProfileImage(url, name) {
 
         } finally {
             try {
-               // await sleep(10000);
+               await sleep(sleepTime);
 
                 try {
                     await page.waitForSelector(`[aria-label="open profile picture"]`)
