@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 import saveAsExel from './d.js';
 
 const timeout = 3000;
-const sleepTime = 10000;
+const sleepTime = 15000;
 
 
 const sleep = (ms) => {
@@ -61,32 +61,21 @@ for (let j = 0; j < fileNames.length; j++) {
 
             if (fs.existsSync(outputPath)) {
                 console.log(`Skiping already Downloded ${outputPath}`)
-                status = "Y";
+                updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "Y");
             } else {
                 try {
                     await DownloadProfileImage(users[index].G, outputPath);
-                    status = "Y";
+                    updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "Y");
+
                 } catch (error) {
-                    console.error(error);
-                    status = "N";
+                    console.error(error[0]);
+                    if (error[1]) {
+                        updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "N");
+                    }
+
                 }
             }
-            const prevData = fs.readFileSync(OutPutFileName, 'utf-8') || {};
-            const data = JSON.parse(prevData);
-            fs.writeFileSync(OutPutFileName, JSON.stringify({
-                ...data,
-                [fileNames[j]]: data[fileNames[j]].map((item) => {
-                    if (item.G == users[index].G) {
-                        return {
-                            ...item,
-                            C: status
-                        }
 
-                    }
-                    return item;
-                })
-
-            }));
 
         }
 
@@ -94,6 +83,24 @@ for (let j = 0; j < fileNames.length; j++) {
 
 }
 
+function updateJsonFile(OutPutFileName, tabNmae, url, status) {
+    const prevData = fs.readFileSync(OutPutFileName, 'utf-8') || {};
+    const data = JSON.parse(prevData);
+    fs.writeFileSync(OutPutFileName, JSON.stringify({
+        ...data,
+        [tabNmae]: data[tabNmae].map((item) => {
+            if (item.G == url) {
+                return {
+                    ...item,
+                    C: status
+                }
+
+            }
+            return item;
+        })
+
+    }));
+}
 
 let fileRes = [
     ['A', "B", "C", "D", "E", "G"]
@@ -106,7 +113,6 @@ Object.keys(oldData).forEach((key) => {
 })
 saveAsExel(inFileName.split(".")[0] + "-new", fileRes);
 fs.unlinkSync(OutPutFileName);
-
 browser.close();
 process.exit(0);
 async function DownloadProfileImage(url, name) {
@@ -122,12 +128,12 @@ async function DownloadProfileImage(url, name) {
 
         } finally {
             try {
-                await sleep(sleepTime);
+                // await sleep(sleepTime);
 
                 try {
                     await page.waitForSelector(`[aria-label="open profile picture"]`)
                 } catch (error) {
-                    reject("not found")
+                    reject(["not found", false])
 
                 }
                 const circleImage = await page.$eval(`[aria-label="open profile picture"]`, el => el.innerHTML);
@@ -135,7 +141,7 @@ async function DownloadProfileImage(url, name) {
                 const imgExist = rootImage.querySelector('img').getAttribute('src');
                 if (imgExist.startsWith('data:image')) {
 
-                    return reject('No profile picture found for -' + url);
+                    return reject(['No profile picture found for -' + url, true]);
 
 
                 }
@@ -145,7 +151,7 @@ async function DownloadProfileImage(url, name) {
                 try {
                     await page.waitForSelector(".pv-member-photo-modal__content-image-container");
                 } catch (error) {
-                    reject(error)
+                    reject([error])
 
                 }
 
@@ -158,12 +164,12 @@ async function DownloadProfileImage(url, name) {
                     return resolve(url);
 
                 } catch (error) {
-                    reject(error)
+                    reject([error])
 
                 }
 
             } catch (error) {
-                return reject(error);
+                return reject([error]);
             }
         }
 
