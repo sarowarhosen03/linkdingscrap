@@ -5,6 +5,8 @@ import fs from 'fs';
 import { parse } from 'node-html-parser';
 import puppeteer from 'puppeteer';
 import saveAsExel from './d.js';
+const idField = "B";
+const urlField = "G";
 
 const timeout = 3000;
 const sleepTime = 15000;
@@ -17,11 +19,19 @@ const sleep = (ms) => {
 const inFileName = process.argv.slice(2)[0] || "sheet.xlsx";
 const OutPutFileName = inFileName.split(".")[0] + ".json";
 if (!fs.existsSync(OutPutFileName)) {
-
+    console.log(inFileName);
     let result = excelToJson({
         sourceFile: inFileName
     });
-    fs.writeFileSync(OutPutFileName, JSON.stringify(result));
+    const newResult = {};
+    Object.keys(result).forEach(item => {
+        const newItem = result[item].map(row => {
+            return (row?.C && (['Y', 'N', 'y', 'n'].includes(row?.C))) ? { ...row, C: '' } : row
+
+        });
+        newResult[item] = newItem;
+    });
+    fs.writeFileSync(OutPutFileName, JSON.stringify(newResult));
 }
 
 
@@ -53,7 +63,7 @@ for (let j = 0; j < fileNames.length; j++) {
     for (let index = 0; index < users.length; index++) {
         let status = ""
 
-        let outputPath = `${outputFolderPath}/${users[index].B}.jpg`
+        let outputPath = `${outputFolderPath}/${users[index][idField]}.jpg`
         if (users[index]?.C) {
             console.log(`Skiping already Downloded ${outputPath}`)
         }
@@ -61,16 +71,15 @@ for (let j = 0; j < fileNames.length; j++) {
 
             if (fs.existsSync(outputPath)) {
                 console.log(`Skiping already Downloded ${outputPath}`)
-                updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "Y");
+                updateJsonFile(OutPutFileName, fileNames[j], users[index][urlField], "Y");
             } else {
                 try {
-                    await DownloadProfileImage(users[index].G, outputPath);
-                    updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "Y");
-
+                    await DownloadProfileImage(users[index][urlField], outputPath);
+                    updateJsonFile(OutPutFileName, fileNames[j], users[index][urlField], "Y");
                 } catch (error) {
                     console.error(error[0]);
                     if (error[1]) {
-                        updateJsonFile(OutPutFileName, fileNames[j], users[index].G, "N");
+                        updateJsonFile(OutPutFileName, fileNames[j], users[index][urlField], "N");
                     }
 
                 }
@@ -127,50 +136,84 @@ async function DownloadProfileImage(url, name) {
         } catch (error) {
 
         } finally {
-            try {
-                // await sleep(sleepTime);
-
+            if (url.includes("/ln/")) {
+                // uts an profile
                 try {
-                    await page.waitForSelector(`[aria-label="open profile picture"]`)
+                    // await sleep(sleepTime);
+
+                    try {
+                        await page.waitForSelector(`[aria-label="open profile picture"]`)
+                    } catch (error) {
+                        reject(["not found", false])
+
+                    }
+                    const circleImage = await page.$eval(`[aria-label="open profile picture"]`, el => el.innerHTML);
+                    const rootImage = parse(circleImage);
+                    const imgExist = rootImage.querySelector('img').getAttribute('src');
+                    if (imgExist.startsWith('data:image')) {
+
+                        return reject(['No profile picture found for -' + url, true]);
+
+
+                    }
+
+                    await page.click(`[aria-label="open profile picture"]`);
+
+                    try {
+                        await page.waitForSelector(".pv-member-photo-modal__content-image-container");
+                    } catch (error) {
+                        reject([error])
+
+                    }
+
+                    const html = await page.$eval(".pv-member-photo-modal__content-image-container", el => el.innerHTML);
+
+                    const root = parse(html);
+                    const img = root.querySelector('img').getAttribute('src');
+                    try {
+                        const ouptputPath = await downloadFile(img, name);
+                        return resolve(url);
+
+                    } catch (error) {
+                        reject([error])
+
+                    }
+
                 } catch (error) {
-                    reject(["not found", false])
-
+                    return reject([error]);
                 }
-                const circleImage = await page.$eval(`[aria-label="open profile picture"]`, el => el.innerHTML);
-                const rootImage = parse(circleImage);
-                const imgExist = rootImage.querySelector('img').getAttribute('src');
-                if (imgExist.startsWith('data:image')) {
-
-                    return reject(['No profile picture found for -' + url, true]);
-
-
-                }
-
-                await page.click(`[aria-label="open profile picture"]`);
-
-                try {
-                    await page.waitForSelector(".pv-member-photo-modal__content-image-container");
-                } catch (error) {
-                    reject([error])
-
-                }
-
-                const html = await page.$eval(".pv-member-photo-modal__content-image-container", el => el.innerHTML);
-
-                const root = parse(html);
-                const img = root.querySelector('img').getAttribute('src');
-                try {
-                    const ouptputPath = await downloadFile(img, name);
-                    return resolve(url);
-
-                } catch (error) {
-                    reject([error])
-
-                }
-
-            } catch (error) {
-                return reject([error]);
             }
+            else {
+                try {
+                    // await sleep(sleepTime);
+
+                    try {
+                        await page.waitForSelector(`.org-top-card-primary-content__logo-container`)
+                    } catch (error) {
+                        reject(["not found", false])
+
+                    }
+                    const circleImage = await page.$eval(`.org-top-card-primary-content__logo-container`, el => el.innerHTML);
+                    const rootImage = parse(circleImage);
+                    const imgExist = rootImage.querySelector('img').getAttribute('src');
+                    if (imgExist.startsWith('data:image')) {
+                        return reject(['No profile picture found for -' + url, true]);
+
+                    }
+                    try {
+                        const ouptputPath = await downloadFile(imgExist, name);
+                        return resolve(url);
+
+                    } catch (error) {
+                        reject([error])
+
+                    }
+
+                } catch (error) {
+                    return reject([error]);
+                }
+            }
+
         }
 
 
