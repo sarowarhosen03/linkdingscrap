@@ -136,7 +136,8 @@ async function DownloadProfileImage(url, name) {
         } catch (error) {
 
         } finally {
-            if (url.includes("/ln/")) {
+            if (url.includes("/in/")) {
+
                 // uts an profile
                 try {
                     // await sleep(sleepTime);
@@ -144,7 +145,7 @@ async function DownloadProfileImage(url, name) {
                     try {
                         await page.waitForSelector(`[aria-label="open profile picture"]`)
                     } catch (error) {
-                        reject(["not found", false])
+                        reject(["not found" + url, false])
 
                     }
                     const circleImage = await page.$eval(`[aria-label="open profile picture"]`, el => el.innerHTML);
@@ -184,6 +185,7 @@ async function DownloadProfileImage(url, name) {
                 }
             }
             else {
+
                 try {
                     // await sleep(sleepTime);
 
